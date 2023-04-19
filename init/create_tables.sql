@@ -6,5 +6,5 @@ CREATE TABLE raw_data (
     linear_acceleration_y FLOAT NOT NULL,
     linear_acceleration_z FLOAT NOT NULL,
     absolute_acceleration FLOAT NOT NULL,
-    PRIMARY KEY(username, filename)
+    PRIMARY KEY(username, filename, time)
 );

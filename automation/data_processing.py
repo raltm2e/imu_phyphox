@@ -4,7 +4,7 @@ import pandas
 ACCELERATION_NOISE_THRESHOLD_POSITIVE = 0.9
 ACCELERATION_NOISE_THRESHOLD_NEGATIVE = -1.5
 
-df = pandas.read_csv('Acceleration without g 2023-03-26 13-13-54/Raw Data.csv')
+df = pandas.read_csv('../Acceleration without g 2023-03-26 13-13-54/Raw Data.csv')
 
 # df.plot.line(x="Time (s)", y="Linear Acceleration z (m/s^2)", figsize=(22, 9))
 
