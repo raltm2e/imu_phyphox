@@ -3,11 +3,7 @@ import pandas
 
 ACCELERATION_NOISE_THRESHOLD_POSITIVE = 0.9
 ACCELERATION_NOISE_THRESHOLD_NEGATIVE = -1.5
-
-df = pandas.read_csv('../Acceleration without g 2023-03-26 13-13-54/Raw Data.csv')
-
-# df.plot.line(x="Time (s)", y="Linear Acceleration z (m/s^2)", figsize=(22, 9))
-
+MASS = 5  # body mass in kg
 
 def filter_noise(dataframe):
   new_df = copy.deepcopy(dataframe)
@@ -17,9 +13,6 @@ def filter_noise(dataframe):
       new_df["Linear Acceleration z (m/s^2)"][i] = 0.0
   new_df.plot.line(x="Time (s)", y="Linear Acceleration z (m/s^2)", figsize=(22, 9))
   return new_df
-
-
-filtered_df = filter_noise(df)
 
 
 def get_velocity(acceleration: float, V0: float, delta_t: float):
@@ -41,37 +34,37 @@ def get_energy_spent(mass: float, distance: float, acceleration: float):
   return mass * acceleration * distance
 
 
-mass = 5
-previous_time = 0.0
-previous_velocity = 0.0
-total_distance = 0.0
-total_energy = 0.0
-velocity_vec = [[]]
-distance_vec = [[]]
-energy_vec = [[]]
+def process_data(filename: str) -> pandas.DataFrame:
+  df = pandas.read_csv(filename)
+  previous_time = 0.0
+  previous_velocity = 0.0
+  total_distance = 0.0
+  total_energy = 0.0
+  velocity_vec = [[]]
+  distance_vec = [[]]
+  energy_vec = [[]]
+  for index, row in df.iterrows():
+    timestep = row["Time (s)"] - previous_time
 
-for index, row in df.iterrows():
-  timestep = row["Time (s)"] - previous_time
+    velocity = get_velocity(row["Linear Acceleration z (m/s^2)"], previous_velocity, timestep)
+    velocity_vec.append([row["Time (s)"], velocity])
 
-  velocity = get_velocity(row["Linear Acceleration z (m/s^2)"], previous_velocity, timestep)
-  velocity_vec.append([row["Time (s)"], velocity])
+    distance_step = abs(get_distance(velocity, timestep))
+    total_distance += distance_step
+    distance_vec.append([row["Time (s)"], total_distance])
 
-  distance_step = abs(get_distance(velocity, timestep))
-  total_distance += distance_step
-  distance_vec.append([row["Time (s)"], total_distance])
+    energy_step = abs(get_energy_spent(MASS, distance_step, row["Linear Acceleration z (m/s^2)"]))
+    total_energy += energy_step
+    energy_vec.append([row["Time (s)"], total_energy])
 
-  energy_step = abs(get_energy_spent(mass, distance_step, row["Linear Acceleration z (m/s^2)"]))
-  total_energy += energy_step
-  energy_vec.append([row["Time (s)"], total_energy])
+    previous_velocity = velocity
+    previous_time = row["Time (s)"]
 
-  previous_velocity = velocity
-  previous_time = row["Time (s)"]
+  df_velocity = pandas.DataFrame(velocity_vec, columns=["Time (s)", "Velocity (m/s)"])
+  df_distance = pandas.DataFrame(distance_vec, columns=["Time (s)", "Distance (m)"])
+  df_energy = pandas.DataFrame(energy_vec, columns=["Time (s)", "Energy (J)"])
+  print("Distance is (m): ", total_distance)
+  print("Energy is (J): ", total_energy)
 
-df_velocity = pandas.DataFrame(velocity_vec, columns=["Time (s)", "Velocity (m/s)"])
-#df_velocity.plot.line(x="Time (s)", y="Velocity (m/s)")
-df_distance = pandas.DataFrame(distance_vec, columns=["Time (s)", "Distance (m)"])
-#df_distance.plot.line(x="Time (s)", y="Distance (m)")
-df_energy = pandas.DataFrame(energy_vec, columns=["Time (s)", "Energy (J)"])
-#df_energy.plot.line(x="Time (s)", y="Energy (J)")
-print("Distance is (m): ", total_distance)
-print("Energy is (J): ", total_energy)
+  df_summary = df_velocity.merge(df_distance, on="Time (s)").merge(df_energy, on="Time (s)").dropna()
+  return df_summary
