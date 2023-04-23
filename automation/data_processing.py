@@ -1,5 +1,10 @@
+import base64
 import copy
-import pandas
+from io import BytesIO
+
+from matplotlib import pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from pandas import *
 
 ACCELERATION_NOISE_THRESHOLD_POSITIVE = 0.9
 ACCELERATION_NOISE_THRESHOLD_NEGATIVE = -1.5
@@ -34,8 +39,8 @@ def get_energy_spent(mass: float, distance: float, acceleration: float):
     return mass * acceleration * distance
 
 
-def process_data(filename: str) -> pandas.DataFrame:
-    df = pandas.read_csv(filename)
+def process_data(file) -> DataFrame:
+    df = read_csv(file)
     previous_time = 0.0
     previous_velocity = 0.0
     total_distance = 0.0
@@ -60,11 +65,32 @@ def process_data(filename: str) -> pandas.DataFrame:
         previous_velocity = velocity
         previous_time = row["Time (s)"]
 
-    df_velocity = pandas.DataFrame(velocity_vec, columns=["Time (s)", "Velocity (m/s)"])
-    df_distance = pandas.DataFrame(distance_vec, columns=["Time (s)", "Distance (m)"])
-    df_energy = pandas.DataFrame(energy_vec, columns=["Time (s)", "Energy (J)"])
+    df_velocity = DataFrame(velocity_vec, columns=["Time (s)", "Velocity (m/s)"])
+    df_distance = DataFrame(distance_vec, columns=["Time (s)", "Distance (m)"])
+    df_energy = DataFrame(energy_vec, columns=["Time (s)", "Energy (J)"])
     print("Distance is (m): ", total_distance)
     print("Energy is (J): ", total_energy)
 
     df_summary = df_velocity.merge(df_distance, on="Time (s)").merge(df_energy, on="Time (s)").dropna()
     return df_summary
+
+
+def get_plots(processed_df: DataFrame):
+    fig, axis = plt.subplots()
+    processed_df.plot.line(x="Time (s)", y="Energy (J)", ax=axis)
+    processed_df.plot.line(x="Time (s)", y="Distance (m)", ax=axis)
+    processed_df.plot.line(x="Time (s)", y="Velocity (m/s)", ax=axis)
+    # TODO subplots, y-axis
+    axis.set_title("Exercise summary")
+    axis.set_xlabel("Time (s)")
+    axis.grid()
+    axis.plot()
+
+    # Convert plot to PNG image
+    pngImage = BytesIO()
+    FigureCanvas(fig).print_png(pngImage)
+
+    # Encode PNG image to base64 string
+    pngImageB64String = "data:image/png;base64,"
+    pngImageB64String += base64.b64encode(pngImage.getvalue()).decode('utf8')
+    return pngImageB64String

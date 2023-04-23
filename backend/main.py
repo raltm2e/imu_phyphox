@@ -1,6 +1,7 @@
 import psycopg2
 from flask import Flask, jsonify, render_template, request
 
+from automation.data_processing import process_data, get_plots
 from automation.main import HOSTNAME, DATABASE, USER, PASSWORD, save_all_data
 
 app = Flask(__name__)
@@ -19,7 +20,6 @@ def index():
 
 @app.route('/upload_raw')
 def upload_raw_csv():
-    print("uploading")
     return render_template("index.html")
 
 
@@ -28,11 +28,12 @@ def success():
     if request.method == 'POST':
         f = request.files['file']
         if f.filename.endswith(".csv"):
-            print("saving data")
             save_all_data(f, HOSTNAME, DATABASE, USER, PASSWORD)
-            print("data saved")
-            return render_template("acknowledgment.html", name = f.filename)
-    return render_template("error.html", error = "Wrong file type! File must be .csv")
+            processed_df = process_data(f)
+            generated_plot = get_plots(processed_df)
+            return render_template("acknowledgment.html", name = f.filename, image = generated_plot)
+        return render_template("error.html", error = "Wrong file type! File must be .csv")
+    return render_template("error.html", error = "Bad request")
 
 
 if __name__ == '__main__':
