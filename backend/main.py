@@ -28,8 +28,7 @@ def success():
     if request.method == 'POST':
         f = request.files['file']
         if f.filename.endswith(".csv"):
-            save_all_data(f, HOSTNAME, DATABASE, USER, PASSWORD)
-            processed_df = process_data(f)
+            processed_df = save_all_data(f, HOSTNAME, DATABASE, USER, PASSWORD)
             generated_plot = get_plots(processed_df)
             return render_template("acknowledgment.html", name = f.filename, image = generated_plot)
         return render_template("error.html", error = "Wrong file type! File must be .csv")

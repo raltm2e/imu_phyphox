@@ -39,8 +39,7 @@ def get_energy_spent(mass: float, distance: float, acceleration: float):
     return mass * acceleration * distance
 
 
-def process_data(file) -> DataFrame:
-    df = read_csv(file)
+def process_data(df_raw: DataFrame) -> DataFrame:
     previous_time = 0.0
     previous_velocity = 0.0
     total_distance = 0.0
@@ -48,7 +47,7 @@ def process_data(file) -> DataFrame:
     velocity_vec = [[]]
     distance_vec = [[]]
     energy_vec = [[]]
-    for index, row in df.iterrows():
+    for index, row in df_raw.iterrows():
         timestep = row["Time (s)"] - previous_time
 
         velocity = get_velocity(row["Linear Acceleration z (m/s^2)"], previous_velocity, timestep)
