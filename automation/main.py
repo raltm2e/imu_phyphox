@@ -7,6 +7,12 @@ PASSWORD = "pass"
 
 FILENAME = "/home/robert/IdeaProjects/imu_phyphox/Acceleration without g 2023-03-26 13-07-06/Raw Data.csv"
 
+def save_all_data(file, hostname, database, user, password):
+    insert_csv_into_db(file.filename, hostname, database, user, password)
+    df_summary = process_data(file.filename)
+    print(df_summary.head(10))
+    insert_df_into_db(df_summary, file.filename, hostname, database, user, password)
+
 
 if __name__ == '__main__':
     insert_csv_into_db(FILENAME, HOSTNAME, DATABASE, USER, PASSWORD)
