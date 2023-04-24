@@ -1,7 +1,6 @@
-import psycopg2
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, render_template, request
 
-from automation.data_processing import process_data, get_plots
+from automation.data_processing import get_plots
 from automation.main import HOSTNAME, DATABASE, USER, PASSWORD, save_all_data
 
 app = Flask(__name__)
@@ -9,21 +8,10 @@ app = Flask(__name__)
 
 @app.route('/', methods=["GET"])
 def index():
-    conn = psycopg2.connect(host=HOSTNAME, database=DATABASE, user=USER, password=PASSWORD)
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM processed_data LIMIT 50")
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-    return jsonify(rows)
-
-
-@app.route('/upload_raw')
-def upload_raw_csv():
     return render_template("index.html")
 
 
-@app.route('/upload_raw/success', methods = ['POST'])
+@app.route('/success', methods = ['POST'])
 def success():
     if request.method == 'POST':
         f = request.files['file']
