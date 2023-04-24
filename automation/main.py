@@ -8,21 +8,14 @@ PASSWORD = "pass"
 
 FILENAME = "/home/robert/IdeaProjects/imu_phyphox/Acceleration without g 2023-03-26 13-07-06/Raw Data.csv"
 
-def save_all_data(file, hostname, database, user, password):
+def save_all_data(file, mass, hostname, database, user, password):
     df_raw = read_csv(file)
     try:
         insert_csv_into_db(df_raw, file, hostname, database, user, password)
     finally:
-        df_summary = process_data(df_raw)
+        df_summary = process_data(df_raw, mass)
         print(df_summary.head(10))
         try:
             insert_df_into_db(df_summary, file, hostname, database, user, password)
         finally:
             return df_summary
-
-
-if __name__ == '__main__':
-    insert_csv_into_db(FILENAME, HOSTNAME, DATABASE, USER, PASSWORD)
-    df_summary = process_data(FILENAME)
-    print(df_summary.head(10))
-    insert_df_into_db(df_summary, FILENAME, HOSTNAME, DATABASE, USER, PASSWORD)

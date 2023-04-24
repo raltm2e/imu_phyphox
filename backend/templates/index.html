@@ -4,8 +4,22 @@
     </head>
     <body>
         <form action = "/success" method = "post" enctype="multipart/form-data">
-            <input type="file" name="file" />
-            <input type = "submit" value="Upload">
+            <div>
+                <label>
+                    Insert mass
+                    <br>
+                    <input type="number" name="mass" placeholder="kg" value="10"/>
+                </label>
+            </div>
+            <br>
+            <div>
+                <label>
+                    Upload CSV file
+                    <br>
+                    <input type="file" name="file" />
+                    <input type = "submit" value="Upload">
+                </label>
+            </div>
         </form>
     </body>
 </html>

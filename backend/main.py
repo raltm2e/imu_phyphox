@@ -15,8 +15,9 @@ def index():
 def success():
     if request.method == 'POST':
         f = request.files['file']
+        mass = int(request.form.get("mass"))
         if f.filename.endswith(".csv"):
-            processed_df = save_all_data(f, HOSTNAME, DATABASE, USER, PASSWORD)
+            processed_df = save_all_data(f, mass, HOSTNAME, DATABASE, USER, PASSWORD)
             generated_plot = get_plots(processed_df)
             return render_template("acknowledgment.html", name = f.filename, image = generated_plot)
         return render_template("error.html", error = "Wrong file type! File must be .csv")
@@ -24,4 +25,4 @@ def success():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', debug=False)

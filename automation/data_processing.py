@@ -8,7 +8,7 @@ from pandas import *
 
 ACCELERATION_NOISE_THRESHOLD_POSITIVE = 0.9
 ACCELERATION_NOISE_THRESHOLD_NEGATIVE = -1.5
-MASS = 5  # body mass in kg
+
 
 def filter_noise(dataframe):
     new_df = copy.deepcopy(dataframe)
@@ -32,14 +32,14 @@ def get_distance(delta_V: float, delta_t: float):
     return delta_V * delta_t
 
 
-def get_energy_spent(mass: float, distance: float, acceleration: float):
+def get_energy_spent(mass: int, distance: float, acceleration: float):
     # A = F*s
     # F = m*a
     # A = m*a*s
     return mass * acceleration * distance
 
 
-def process_data(df_raw: DataFrame) -> DataFrame:
+def process_data(df_raw: DataFrame, mass: int) -> DataFrame:
     previous_time = 0.0
     previous_velocity = 0.0
     total_distance = 0.0
@@ -57,7 +57,7 @@ def process_data(df_raw: DataFrame) -> DataFrame:
         total_distance += distance_step
         distance_vec.append([row["Time (s)"], total_distance])
 
-        energy_step = abs(get_energy_spent(MASS, distance_step, row["Linear Acceleration z (m/s^2)"]))
+        energy_step = abs(get_energy_spent(mass, distance_step, row["Linear Acceleration z (m/s^2)"]))
         total_energy += energy_step
         energy_vec.append([row["Time (s)"], total_energy])
 
