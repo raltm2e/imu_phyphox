@@ -75,21 +75,23 @@ def process_data(df_raw: DataFrame) -> DataFrame:
 
 
 def get_plots(processed_df: DataFrame):
-    fig, axis = plt.subplots()
-    processed_df.plot.line(x="Time (s)", y="Energy (J)", ax=axis)
-    processed_df.plot.line(x="Time (s)", y="Distance (m)", ax=axis)
-    processed_df.plot.line(x="Time (s)", y="Velocity (m/s)", ax=axis)
-    # TODO subplots, y-axis
-    axis.set_title("Exercise summary")
-    axis.set_xlabel("Time (s)")
-    axis.grid()
-    axis.plot()
+    fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(8,12), sharex=True)
+    processed_df.plot.line(x="Time (s)", y="Energy (J)", ax=axes[0])
+    processed_df.plot.line(x="Time (s)", y="Distance (m)", ax=axes[1])
+    processed_df.plot.line(x="Time (s)", y="Velocity (m/s)", ax=axes[2])
+    axes[0].set_title("Energy (J)")
+    axes[1].set_title("Distance (m)")
+    axes[2].set_title("Velocity (m/s)")
+    axes[-1].set_xlabel("Time (s)")
+    fig.subplots_adjust(hspace=0.2)
+    for ax in axes:
+        ax.grid()
 
     # Convert plot to PNG image
-    pngImage = BytesIO()
-    FigureCanvas(fig).print_png(pngImage)
+    png_image = BytesIO()
+    FigureCanvas(fig).print_png(png_image)
 
     # Encode PNG image to base64 string
-    pngImageB64String = "data:image/png;base64,"
-    pngImageB64String += base64.b64encode(pngImage.getvalue()).decode('utf8')
-    return pngImageB64String
+    png_image_b64 = "data:image/png;base64,"
+    png_image_b64 += base64.b64encode(png_image.getvalue()).decode('utf8')
+    return png_image_b64
