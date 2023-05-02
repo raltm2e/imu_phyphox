@@ -1,5 +1,7 @@
 flask
 matplotlib
 pandas
+numpy
 sqlalchemy
 psycopg2-binary
+scipy
