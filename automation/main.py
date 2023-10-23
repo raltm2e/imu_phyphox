@@ -8,6 +8,7 @@ PASSWORD = "pass"
 
 FILENAME = "/home/robert/IdeaProjects/imu_phyphox/Acceleration without g 2023-03-26 13-07-06/Raw Data.csv"
 
+
 def save_all_data(file, mass, hostname, database, user, password):
     df_raw = read_csv(file)
     try:

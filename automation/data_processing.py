@@ -75,7 +75,7 @@ def process_data(df_raw: DataFrame, mass: int) -> DataFrame:
 
 
 def get_plots(processed_df: DataFrame):
-    fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(8,12), sharex=True)
+    fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(8, 12), sharex=True)
     processed_df.plot.line(x="Time (s)", y="Energy (J)", ax=axes[0])
     processed_df.plot.line(x="Time (s)", y="Distance (m)", ax=axes[1])
     processed_df.plot.line(x="Time (s)", y="Velocity (m/s)", ax=axes[2])
