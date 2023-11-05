@@ -10,7 +10,7 @@ ACCELERATION_NOISE_THRESHOLD_POSITIVE = 0.9
 ACCELERATION_NOISE_THRESHOLD_NEGATIVE = -1.5
 
 
-def filter_noise(dataframe):
+def filter_noise(dataframe) -> DataFrame:
     new_df = copy.deepcopy(dataframe)
     changes = new_df.pct_change()["Linear Acceleration z (m/s^2)"]
     for i, change in changes.items():
@@ -20,19 +20,31 @@ def filter_noise(dataframe):
     return new_df
 
 
-def get_velocity(acceleration: float, V0: float, delta_t: float):
+def filter_noise_running_mean(dataframe) -> DataFrame:
+    new_df = copy.deepcopy(dataframe)
+    print(dataframe.head(10)[['Time (s)', 'Linear Acceleration z (m/s^2)']])
+    acceleration_z = dataframe['Linear Acceleration z (m/s^2)']
+    window_size = 5
+    smoothed_acceleration_z = acceleration_z.rolling(window=window_size).mean()
+    smoothed_acceleration_z.fillna(0.0, inplace=True)
+    new_df['Linear Acceleration z (m/s^2)'] = smoothed_acceleration_z
+    print(new_df.head(10)[['Time (s)', 'Linear Acceleration z (m/s^2)']])
+    return new_df
+
+
+def get_velocity(acceleration: float, V0: float, delta_t: float) -> float:
     # a = (V1-V0) / t
     # V1 = a*t + V0
     return acceleration * delta_t + V0
 
 
-def get_distance(delta_V: float, delta_t: float):
+def get_distance(delta_V: float, delta_t: float) -> float:
     # V = s/t
     # s = V*t
     return delta_V * delta_t
 
 
-def get_energy_spent(mass: int, distance: float, acceleration: float):
+def get_energy_spent(mass: int, distance: float, acceleration: float) -> float:
     # A = F*s
     # F = m*a
     # A = m*a*s
@@ -40,6 +52,8 @@ def get_energy_spent(mass: int, distance: float, acceleration: float):
 
 
 def process_data(df_raw: DataFrame, mass: int) -> DataFrame:
+    df_filtered = filter_noise_running_mean(df_raw)
+
     previous_time = 0.0
     previous_velocity = 0.0
     total_distance = 0.0
@@ -47,7 +61,7 @@ def process_data(df_raw: DataFrame, mass: int) -> DataFrame:
     velocity_vec = [[]]
     distance_vec = [[]]
     energy_vec = [[]]
-    for index, row in df_raw.iterrows():
+    for index, row in df_filtered.iterrows():
         timestep = row["Time (s)"] - previous_time
 
         velocity = get_velocity(row["Linear Acceleration z (m/s^2)"], previous_velocity, timestep)

@@ -1,7 +1,11 @@
 from flask import Flask, render_template, request
 
-from automation.data_processing import get_plots
-from automation.main import HOSTNAME, DATABASE, USER, PASSWORD, save_all_data
+from backend.automation.data_processing import get_plots
+from backend.automation.db_integration import save_all_data
+HOSTNAME = "localhost"
+DATABASE = "postgres"
+USER = "postgres"
+PASSWORD = "pass"
 
 app = Flask(__name__)
 

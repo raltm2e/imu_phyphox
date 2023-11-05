@@ -1,6 +1,7 @@
 import psycopg2
 from sqlalchemy import create_engine
-from pandas import DataFrame
+from pandas import DataFrame, read_csv
+from backend.automation.data_processing import process_data
 
 
 def insert_csv_into_db(df_raw: DataFrame, file, hostname: str, database: str, user: str, password: str):
@@ -42,3 +43,16 @@ def insert_df_into_db(df_summary: DataFrame, file, hostname: str, database: str,
                  'Energy (J)': 'energy'})
     df_summary.to_sql('processed_data', engine, if_exists='append', index=False)
     conn.close()
+
+
+def save_all_data(file, mass, hostname, database, user, password):
+    df_raw = read_csv(file)
+    try:
+        insert_csv_into_db(df_raw, file, hostname, database, user, password)
+    finally:
+        df_summary = process_data(df_raw, mass)
+        print(df_summary.head(10))
+        try:
+            insert_df_into_db(df_summary, file, hostname, database, user, password)
+        finally:
+            return df_summary
