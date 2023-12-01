@@ -1,11 +1,11 @@
 use std::collections::LinkedList;
+use std::fmt::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::vec::Vec;
-use actix_web::error::Error;
 use crate::constants::{ACCELERATION_NOISE_THRESHOLD_NEGATIVE, ACCELERATION_NOISE_THRESHOLD_POSITIVE};
-use crate::models::imudata::{ProcessedData, RawData};
+use crate::models::imudata::{ImuDataResult, ProcessedData, RawData};
 
 
 fn filter_noise(data: Vec<(f32, f32)>) -> Vec<(f32, f32)> {
@@ -35,7 +35,7 @@ fn get_distance(delta_v: f32, delta_t: f32) -> f32 {
     delta_v * delta_t
 }
 
-fn get_energy_spent(mass: i32, distance: f32, acceleration: f32) -> f32 {
+fn get_energy_spent(mass: u32, distance: f32, acceleration: f32) -> f32 {
     // A = F*s
     // F = m*a
     // A = m*a*s
@@ -43,18 +43,22 @@ fn get_energy_spent(mass: i32, distance: f32, acceleration: f32) -> f32 {
 }
 
 fn get_raw_data_from_file(file_path: &Path) -> Result<Vec<RawData>, Error> {
-    let file = File::open(file_path)?;
+    let file = File::open(file_path).unwrap();
     let reader = BufReader::new(file);
     let mut raw_data = vec![];
     for line in reader.lines().skip(1) {
-        let values: Vec<f32> = line?.split(',').map(|s| s.parse().unwrap()).collect();
+        let values: Vec<f32> = line.unwrap().split(',').map(|s| s.parse().unwrap()).collect();
         let raw_data_row: RawData = RawData::try_from(values).unwrap();
         raw_data.push(raw_data_row);
     }
     Ok(raw_data)
 }
 
-pub fn process_data(file_path: &Path, mass: i32) -> Result<Vec<ProcessedData>, Error> {
+fn count_repetitions(processed_data: Vec<ProcessedData>) -> u32 {
+    todo!("Count repetitions")
+}
+
+pub fn get_processed_data(file_path: &Path, mass: u32) -> Result<Vec<ProcessedData>, Error> {
     let raw_data = get_raw_data_from_file(file_path)?;
     let mut previous_time = 0.0;
     let mut previous_velocity = 0.0;
@@ -90,4 +94,20 @@ pub fn process_data(file_path: &Path, mass: i32) -> Result<Vec<ProcessedData>, E
         }
     }
     Ok(processed_data)
+}
+
+pub fn get_imudata_result(processed_data: Vec<ProcessedData>) -> Result<ImuDataResult, Error> {
+    let processed_data_clone = processed_data.clone();
+    let last_row = match processed_data_clone.last() {
+        Some(data) => {data}
+        None => {return Err(Error)}
+    };
+    let imu_data_result = ImuDataResult {
+        processed_data,
+        repetitions: 10,
+        spent_time: last_row.time,
+        total_distance: last_row.distance,
+        spent_energy: last_row.energy,
+    };
+    Ok(imu_data_result)
 }

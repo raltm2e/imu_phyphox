@@ -26,10 +26,19 @@ impl TryFrom<Vec<f32>> for RawData {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ProcessedData {
     pub time: f32,
     pub distance: f32,
     pub energy: f32,
     pub velocity: f32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ImuDataResult {
+    pub processed_data: Vec<ProcessedData>,
+    pub repetitions: u32,
+    pub spent_time: f32,
+    pub total_distance: f32,
+    pub spent_energy: f32,
 }
