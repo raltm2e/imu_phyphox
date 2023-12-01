@@ -42,24 +42,32 @@ fn get_energy_spent(mass: u32, distance: f32, acceleration: f32) -> f32 {
     mass as f32 * acceleration * distance
 }
 
-fn get_raw_data_from_file(file_path: &Path) -> Result<Vec<RawData>, Error> {
-    let file = File::open(file_path).unwrap();
-    let reader = BufReader::new(file);
+fn count_repetitions(_processed_data: &[ProcessedData]) -> u32 {
+    10
+}
+
+pub fn handle_lines(lines: Vec<String>) -> Result<Vec<RawData>, Error> {
     let mut raw_data = vec![];
-    for line in reader.lines().skip(1) {
-        let values: Vec<f32> = line.unwrap().split(',').map(|s| s.parse().unwrap()).collect();
+    for line in lines.iter().skip(1) {
+        let values: Vec<f32> = line.split(',').map(|s| s.parse().unwrap()).collect();
         let raw_data_row: RawData = RawData::try_from(values).unwrap();
         raw_data.push(raw_data_row);
     }
     Ok(raw_data)
 }
 
-fn count_repetitions(processed_data: Vec<ProcessedData>) -> u32 {
-    todo!("Count repetitions")
+pub fn get_raw_data_from_file_path(file_path: &Path) -> Result<Vec<RawData>, Error> {
+    let file = File::open(file_path).unwrap();
+    let reader = BufReader::new(file);
+    handle_lines(reader.lines().skip(1).map(|l| l.unwrap()).collect::<Vec<String>>())
 }
 
-pub fn get_processed_data(file_path: &Path, mass: u32) -> Result<Vec<ProcessedData>, Error> {
-    let raw_data = get_raw_data_from_file(file_path)?;
+pub fn get_raw_data_from_input_file(file: File) -> Result<Vec<RawData>, Error> {
+    let reader = BufReader::new(file);
+    handle_lines(reader.lines().skip(1).map(|l| l.unwrap()).collect::<Vec<String>>())
+}
+
+pub fn get_processed_data(raw_data: Vec<RawData>, mass: u32) -> Result<Vec<ProcessedData>, Error> {
     let mut previous_time = 0.0;
     let mut previous_velocity = 0.0;
     let mut total_distance = 0.0;
@@ -102,9 +110,10 @@ pub fn get_imudata_result(processed_data: Vec<ProcessedData>) -> Result<ImuDataR
         Some(data) => {data}
         None => {return Err(Error)}
     };
+    let repetitions = count_repetitions(&processed_data);
     let imu_data_result = ImuDataResult {
         processed_data,
-        repetitions: 10,
+        repetitions,
         spent_time: last_row.time,
         total_distance: last_row.distance,
         spent_energy: last_row.energy,
