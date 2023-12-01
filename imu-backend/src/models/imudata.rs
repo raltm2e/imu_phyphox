@@ -1,4 +1,6 @@
+use actix_web::error::Error;
 use serde::{Deserialize, Serialize};
+use crate::errors::{ImuServerError, ServerResponseError};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RawData {
@@ -10,11 +12,13 @@ pub struct RawData {
 }
 
 impl TryFrom<Vec<f32>> for RawData {
-    type Error = &'static str;
+    type Error = Error;
 
-    fn try_from(values: Vec<f32>) -> Result<Self, Self::Error> {
+    fn try_from(values: Vec<f32>) -> Result<Self, Error> {
         if values.len() != 5 {
-            return Err("Invalid number of values");
+            return Err(
+                ServerResponseError(ImuServerError::DataProcessing.into()).into()
+            )
         }
         Ok(RawData {
             time: values[0],
@@ -36,7 +40,6 @@ pub struct ProcessedData {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ImuDataResult {
-    pub processed_data: Vec<ProcessedData>,
     pub repetitions: u32,
     pub spent_time: f32,
     pub total_distance: f32,

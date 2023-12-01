@@ -1,14 +1,15 @@
 use std::collections::LinkedList;
-use std::fmt::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::vec::Vec;
+use actix_web::error::Error;
 use crate::constants::{ACCELERATION_NOISE_THRESHOLD_NEGATIVE, ACCELERATION_NOISE_THRESHOLD_POSITIVE};
+use crate::errors::{ImuServerError, ServerResponseError};
 use crate::models::imudata::{ImuDataResult, ProcessedData, RawData};
 
 
-fn filter_noise(data: Vec<(f32, f32)>) -> Vec<(f32, f32)> {
+fn _filter_noise(data: Vec<(f32, f32)>) -> Vec<(f32, f32)> {
     let mut new_data = data;
     let mut changes = LinkedList::new();
     for i in 1..new_data.len() {
@@ -50,14 +51,14 @@ pub fn handle_lines(lines: Vec<String>) -> Result<Vec<RawData>, Error> {
     let mut raw_data = vec![];
     for line in lines.iter().skip(1) {
         let values: Vec<f32> = line.split(',').map(|s| s.parse().unwrap()).collect();
-        let raw_data_row: RawData = RawData::try_from(values).unwrap();
+        let raw_data_row: RawData = RawData::try_from(values)?;
         raw_data.push(raw_data_row);
     }
     Ok(raw_data)
 }
 
 pub fn get_raw_data_from_file_path(file_path: &Path) -> Result<Vec<RawData>, Error> {
-    let file = File::open(file_path).unwrap();
+    let file = File::open(file_path)?;
     let reader = BufReader::new(file);
     handle_lines(reader.lines().skip(1).map(|l| l.unwrap()).collect::<Vec<String>>())
 }
@@ -88,31 +89,28 @@ pub fn get_processed_data(raw_data: Vec<RawData>, mass: u32) -> Result<Vec<Proce
         previous_time = raw_data_row.time;
         data.push((raw_data_row.time, raw_data_row.linear_acceleration_z, velocity, total_distance, total_energy));
     }
-    let filtered_data = filter_noise(distance_vec);
     let mut processed_data: Vec<ProcessedData> = vec![];
     for (i, (time, _, _, distance, energy)) in data.iter().enumerate() {
-        if filtered_data[i].1 != 0.0 {
-            let processed_data_row = ProcessedData {
-                time: *time,
-                distance: *distance,
-                energy: *energy,
-                velocity: velocity_vec[i].1,
-            };
-            processed_data.push(processed_data_row);
-        }
+        let processed_data_row = ProcessedData {
+            time: *time,
+            distance: *distance,
+            energy: *energy,
+            velocity: velocity_vec[i].1,
+        };
+        processed_data.push(processed_data_row);
     }
     Ok(processed_data)
 }
 
 pub fn get_imudata_result(processed_data: Vec<ProcessedData>) -> Result<ImuDataResult, Error> {
-    let processed_data_clone = processed_data.clone();
-    let last_row = match processed_data_clone.last() {
+    let last_row = match processed_data.last() {
         Some(data) => {data}
-        None => {return Err(Error)}
+        None => {return Err(
+            ServerResponseError(ImuServerError::DataProcessing.into()).into()
+        )}
     };
     let repetitions = count_repetitions(&processed_data);
     let imu_data_result = ImuDataResult {
-        processed_data,
         repetitions,
         spent_time: last_row.time,
         total_distance: last_row.distance,
