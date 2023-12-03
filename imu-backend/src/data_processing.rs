@@ -73,29 +73,21 @@ pub fn get_processed_data(raw_data: Vec<RawData>, mass: u32) -> Result<Vec<Proce
     let mut previous_velocity = 0.0;
     let mut total_distance = 0.0;
     let mut total_energy = 0.0;
-    let mut velocity_vec = vec![];
-    let mut distance_vec = vec![];
-    let mut data = vec![];
+    let mut processed_data: Vec<ProcessedData> = vec![];
     for raw_data_row in raw_data.iter() {
         let timestep = raw_data_row.time - previous_time;
         let velocity = get_velocity(raw_data_row.linear_acceleration_z, previous_velocity, timestep);
-        velocity_vec.push((raw_data_row.time, velocity));
         let distance_step = get_distance(velocity, timestep).abs();
         total_distance += distance_step;
-        distance_vec.push((raw_data_row.time, total_distance));
         let energy_step = get_energy_spent(mass, distance_step, raw_data_row.linear_acceleration_z.abs());
         total_energy += energy_step;
         previous_velocity = velocity;
         previous_time = raw_data_row.time;
-        data.push((raw_data_row.time, raw_data_row.linear_acceleration_z, velocity, total_distance, total_energy));
-    }
-    let mut processed_data: Vec<ProcessedData> = vec![];
-    for (i, (time, _, _, distance, energy)) in data.iter().enumerate() {
         let processed_data_row = ProcessedData {
-            time: *time,
-            distance: *distance,
-            energy: *energy,
-            velocity: velocity_vec[i].1,
+            time: raw_data_row.time,
+            distance: total_distance,
+            energy: total_energy,
+            velocity,
         };
         processed_data.push(processed_data_row);
     }
