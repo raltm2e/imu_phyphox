@@ -12,18 +12,19 @@ const NavBar = () => {
         <Navbar.Divider/>
         <Link
           role='button'
+          className='bp4-button bp4-minimal bp4-icon-label'
+          to='/upload'
+        >Upload</Link>
+        <Link
+          role='button'
           className='bp4-button bp4-minimal bp4-icon-document'
           to='/plots'
-        >
-          Plots
-        </Link>
+        >Plots</Link>
         <Link
           role='button'
           className='bp4-button bp4-minimal bp4-icon-label'
           to='/about'
-        >
-          About
-        </Link>
+        >About</Link>
       </Navbar.Group>
     </Navbar>
   );
