@@ -5,9 +5,10 @@ type RawData = {
 };
 
 type ProcessedData = {
-  id: string;
-  timestamp: string;
   repetitions: number;
+  spent_time: number;
+  total_distance: number;
+  spent_energy: number;
 };
 
 export type {

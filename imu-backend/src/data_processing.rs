@@ -1,7 +1,7 @@
 use std::collections::LinkedList;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::path::Path;
+use std::path::PathBuf;
 use std::vec::Vec;
 use actix_web::error::Error;
 use crate::constants::{ACCELERATION_NOISE_THRESHOLD_NEGATIVE, ACCELERATION_NOISE_THRESHOLD_POSITIVE};
@@ -57,13 +57,8 @@ pub fn handle_lines(lines: Vec<String>) -> Result<Vec<RawData>, Error> {
     Ok(raw_data)
 }
 
-pub fn get_raw_data_from_file_path(file_path: &Path) -> Result<Vec<RawData>, Error> {
+pub fn get_raw_data_from_file_path(file_path: &PathBuf) -> Result<Vec<RawData>, Error> {
     let file = File::open(file_path)?;
-    let reader = BufReader::new(file);
-    handle_lines(reader.lines().skip(1).map(|l| l.unwrap()).collect::<Vec<String>>())
-}
-
-pub fn get_raw_data_from_input_file(file: File) -> Result<Vec<RawData>, Error> {
     let reader = BufReader::new(file);
     handle_lines(reader.lines().skip(1).map(|l| l.unwrap()).collect::<Vec<String>>())
 }
