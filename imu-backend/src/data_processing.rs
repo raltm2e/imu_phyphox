@@ -118,6 +118,7 @@ pub fn get_processed_data(raw_data: &Vec<RawData>, mass: u32) -> Result<Vec<Proc
 pub fn get_imudata_result(
     processed_data: Vec<ProcessedData>,
     repetitions: u32,
+    raw_data: Vec<RawData>,
 ) -> Result<ImuDataResult, Error> {
     let last_row = match processed_data.last() {
         Some(data) => data,
@@ -128,6 +129,8 @@ pub fn get_imudata_result(
         spent_time: last_row.time,
         total_distance: last_row.distance,
         spent_energy: last_row.energy,
+        raw_data,
+        processed_data,
     };
     Ok(imu_data_result)
 }

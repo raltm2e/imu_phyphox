@@ -26,7 +26,7 @@ async fn imudata(req_body: String) -> Result<Json<ImuDataResult>, Error> {
         ServerResponseError(ImuServerError::DataProcessing.into())
     })?;
     let repetitions: u32 = count_repetitions(&raw_data);
-    let imudata = get_imudata_result(processed_data, repetitions)?;
+    let imudata = get_imudata_result(processed_data, repetitions, raw_data)?;
     Ok(Json(imudata))
 }
 
@@ -41,7 +41,7 @@ async fn imudata_file(payload: Multipart) -> Result<Json<ImuDataResult>, Error> 
         ServerResponseError(ImuServerError::DataProcessing.into())
     })?;
     let repetitions: u32 = count_repetitions(&raw_data);
-    let imudata_result = get_imudata_result(processed_data, repetitions).map_err(|e| {
+    let imudata_result = get_imudata_result(processed_data, repetitions, raw_data).map_err(|e| {
         error!("Failed to summarize final results: {:?}", e);
         ServerResponseError(ImuServerError::DataProcessing.into())
     })?;

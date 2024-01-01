@@ -1,12 +1,13 @@
 import React, {useEffect} from 'react';
+import Plot from 'react-plotly.js';
 import {useNavigate} from 'react-router-dom';
 import {FileInput, H1} from "@blueprintjs/core";
 import PageHolder from "../components/PageHolder";
-import {ProcessedData} from "../models/imudata";
+import {ImuDataResult} from "../models/imudata";
 
 const Upload = () => {
   const navigate = useNavigate();
-  const [processedData, setProcessedData] = React.useState<ProcessedData | undefined>(undefined);
+  const [imuDataResult, setImuDataResult] = React.useState<ImuDataResult | undefined>(undefined);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = event.target.files;
@@ -31,7 +32,7 @@ const Upload = () => {
             body: data,
           })
             .then(r => r.json())
-            .then(data => setProcessedData(data as ProcessedData))
+            .then(data => setImuDataResult(data as ImuDataResult))
             .catch(e => console.log("error: ", e));
         }
       };
@@ -48,11 +49,41 @@ const Upload = () => {
       <H1>Upload</H1>
       <div>
         <FileInput large text={'Upload your file'} buttonText={'Upload'} onInputChange={handleFileUpload} />
-        <p>Repetitions: {processedData?.repetitions}</p>
-        <p>Exercise time: {processedData?.spent_time} seconds</p>
-        <p>Total distance: {processedData?.total_distance} meters</p>
-        <p>Spent energy: {processedData?.spent_energy} Joules</p>
       </div>
+      {imuDataResult &&
+        <div>
+          <div>
+              <p>Repetitions: {imuDataResult.repetitions}</p>
+              <p>Exercise time: {imuDataResult.spent_time} seconds</p>
+              <p>Total distance: {imuDataResult.total_distance} meters</p>
+              <p>Spent energy: {imuDataResult.spent_energy} Joules</p>
+          </div>
+          <div>
+            <Plot
+              data={[{
+                  type: 'scatter',
+                  x: imuDataResult.raw_data.map(data => data.time),
+                  y: imuDataResult.raw_data.map(data => data.linear_acceleration_z),
+                  name: 'linear_acceleration_z'
+                },
+              ]}
+              layout={ {title: 'Raw data'} }
+            />
+          </div>
+          <div>
+            <Plot
+                data={[{
+                  type: 'scatter',
+                  x: imuDataResult.processed_data.map(data => data.time),
+                  y: imuDataResult.processed_data.map(data => data.energy),
+                  name: 'Energy'
+                },
+                ]}
+                layout={ {title: 'Spent energy'} }
+            />
+          </div>
+        </div>
+      }
     </PageHolder>
   );
 };
