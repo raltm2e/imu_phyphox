@@ -44,4 +44,6 @@ pub struct ImuDataResult {
     pub spent_time: f32,
     pub total_distance: f32,
     pub spent_energy: f32,
+    pub raw_data: Vec<RawData>,
+    pub processed_data: Vec<ProcessedData>,
 }
