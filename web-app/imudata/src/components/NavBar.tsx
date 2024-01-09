@@ -1,30 +1,30 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
-import {Alignment, Navbar} from '@blueprintjs/core';
+import {Alignment, Navbar, NavbarHeading} from '@blueprintjs/core';
+import styles from '../styles/Navbar.module.css';
 
 const NavBar = () => {
   return (
-    <Navbar fixedToTop className='h-16 flex items-center'>
+    <Navbar fixedToTop className={styles.navbar}>
       <Navbar.Group align={Alignment.LEFT}>
-        <Navbar.Heading
+        <NavbarHeading
           className='text-m font-bold uppercase tracking-wider text-gray-600'
-        >This is a navbar</Navbar.Heading>
+        >This is a navbar</NavbarHeading>
         <Navbar.Divider/>
-        <Link
-          role='button'
-          className='bp4-button bp4-minimal bp4-icon-label'
-          to='/upload'
-        >Upload</Link>
-        <Link
-          role='button'
-          className='bp4-button bp4-minimal bp4-icon-document'
-          to='/plots'
-        >Plots</Link>
-        <Link
-          role='button'
-          className='bp4-button bp4-minimal bp4-icon-label'
-          to='/about'
-        >About</Link>
+        <NavbarHeading>
+          <Link
+              role='button'
+              className='bp4-button bp4-minimal bp4-icon-label'
+              to='/upload'
+          >Upload</Link>
+        </NavbarHeading>
+        <NavbarHeading>
+          <Link
+              role='button'
+              className='bp4-button bp4-minimal bp4-icon-label'
+              to='/about'
+          >About</Link>
+        </NavbarHeading>
       </Navbar.Group>
     </Navbar>
   );

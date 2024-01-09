@@ -1,7 +1,7 @@
 import React, {useEffect} from 'react';
 import Plot from 'react-plotly.js';
 import {useNavigate} from 'react-router-dom';
-import {FileInput, H1} from "@blueprintjs/core";
+import {Card, FileInput, H1} from "@blueprintjs/core";
 import PageHolder from "../components/PageHolder";
 import {ImuDataResult} from "../models/imudata";
 
@@ -10,6 +10,7 @@ const Upload = () => {
   const [imuDataResult, setImuDataResult] = React.useState<ImuDataResult | undefined>(undefined);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setImuDataResult(undefined);
     const fileList = event.target.files;
     if (fileList) {
       const file = fileList[0];
@@ -46,44 +47,49 @@ const Upload = () => {
 
   return (
     <PageHolder>
-      <H1>Upload</H1>
-      <div>
-        <FileInput large text={'Upload your file'} buttonText={'Upload'} onInputChange={handleFileUpload} />
-      </div>
-      {imuDataResult &&
+      <Card>
+        <H1>Upload</H1>
         <div>
-          <div>
-              <p>Repetitions: {imuDataResult.repetitions}</p>
-              <p>Exercise time: {imuDataResult.spent_time} seconds</p>
-              <p>Total distance: {imuDataResult.total_distance} meters</p>
-              <p>Spent energy: {imuDataResult.spent_energy} Joules</p>
-          </div>
-          <div>
-            <Plot
-              data={[{
-                  type: 'scatter',
-                  x: imuDataResult.raw_data.map(data => data.time),
-                  y: imuDataResult.raw_data.map(data => data.linear_acceleration_z),
-                  name: 'linear_acceleration_z'
-                },
-              ]}
-              layout={ {title: 'Raw data'} }
-            />
-          </div>
-          <div>
-            <Plot
-                data={[{
-                  type: 'scatter',
-                  x: imuDataResult.processed_data.map(data => data.time),
-                  y: imuDataResult.processed_data.map(data => data.energy),
-                  name: 'Energy'
-                },
-                ]}
-                layout={ {title: 'Spent energy'} }
-            />
-          </div>
+          <FileInput large text={'Upload your file'} buttonText={'Upload'} onInputChange={handleFileUpload} />
         </div>
-      }
+      </Card>
+      <br/>
+        {imuDataResult &&
+          <Card>
+            <div>
+              <div>
+                  <p>Repetitions: {imuDataResult.repetitions}</p>
+                  <p>Exercise time: {imuDataResult.spent_time} seconds</p>
+                  <p>Total distance: {imuDataResult.total_distance} meters</p>
+                  <p>Spent energy: {imuDataResult.spent_energy} Joules</p>
+              </div>
+              <div>
+                <Plot
+                  data={[{
+                      type: 'scatter',
+                      x: imuDataResult.raw_data.map(data => data.time),
+                      y: imuDataResult.raw_data.map(data => data.linear_acceleration_z),
+                      name: 'linear_acceleration_z'
+                    },
+                  ]}
+                  layout={ {title: 'Raw data'} }
+                />
+              </div>
+              <div>
+                <Plot
+                    data={[{
+                      type: 'scatter',
+                      x: imuDataResult.processed_data.map(data => data.time),
+                      y: imuDataResult.processed_data.map(data => data.energy),
+                      name: 'Energy'
+                    },
+                    ]}
+                    layout={ {title: 'Spent energy'} }
+                />
+              </div>
+            </div>
+          </Card>
+        }
     </PageHolder>
   );
 };
