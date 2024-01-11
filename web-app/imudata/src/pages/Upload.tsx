@@ -16,11 +16,8 @@ const Upload = () => {
       const file = fileList[0];
       const reader = new FileReader();
       reader.onload = (e) => {
-        if (e.target) {
-          const fileContent = e.target.result;
-          console.log(fileContent);
+        if (e.target && event.target.files) {
           const data = new FormData();
-          // @ts-ignore
           data.append('photo', event.target.files[0]);
           data.append('name', 'Test Name');
           data.append('desc', 'Test description');
@@ -58,21 +55,33 @@ const Upload = () => {
           <Card>
             <div>
               <div>
-                  <p>Repetitions: {imuDataResult.repetitions}</p>
-                  <p>Exercise time: {imuDataResult.spent_time} seconds</p>
-                  <p>Total distance: {imuDataResult.total_distance} meters</p>
-                  <p>Spent energy: {imuDataResult.spent_energy} Joules</p>
+                <p>Repetitions: {imuDataResult.repetitions}</p>
+                <p>Exercise time: {imuDataResult.spent_time} seconds</p>
+                <p>Total distance: {imuDataResult.total_distance} meters</p>
+                <p>Spent energy: {imuDataResult.spent_energy} Joules</p>
               </div>
               <div>
                 <Plot
-                  data={[{
+                    data={[{
                       type: 'scatter',
                       x: imuDataResult.raw_data.map(data => data.time),
                       y: imuDataResult.raw_data.map(data => data.linear_acceleration_z),
                       name: 'linear_acceleration_z'
                     },
-                  ]}
-                  layout={ {title: 'Raw data'} }
+                    ]}
+                    layout={{title: 'Raw data'}}
+                />
+              </div>
+              <div>
+                <Plot
+                    data={[{
+                      type: 'scatter',
+                      x: imuDataResult.processed_data.map(data => data.time),
+                      y: imuDataResult.processed_data.map(data => data.velocity),
+                      name: 'distance'
+                    },
+                    ]}
+                    layout={{title: 'Velocity'}}
                 />
               </div>
               <div>
@@ -84,7 +93,7 @@ const Upload = () => {
                       name: 'Energy'
                     },
                     ]}
-                    layout={ {title: 'Spent energy'} }
+                    layout={{title: 'Spent energy'}}
                 />
               </div>
             </div>

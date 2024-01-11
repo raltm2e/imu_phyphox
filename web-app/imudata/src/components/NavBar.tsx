@@ -9,7 +9,7 @@ const NavBar = () => {
       <Navbar.Group align={Alignment.LEFT}>
         <NavbarHeading
           className='text-m font-bold uppercase tracking-wider text-gray-600'
-        >This is a navbar</NavbarHeading>
+        >IMU data</NavbarHeading>
         <Navbar.Divider/>
         <NavbarHeading>
           <Link
