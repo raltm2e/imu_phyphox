@@ -45,7 +45,7 @@ const Upload = () => {
 
   return (
     <PageHolder>
-      <Card className={styles.uploadCard}>
+      <Card className={styles.card}>
         <H1>Upload</H1>
         <div>
           <FileInput large text={'Upload your file'} buttonText={'Upload'} onInputChange={handleFileUpload} />

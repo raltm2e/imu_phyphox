@@ -16,14 +16,18 @@ const NavBar = () => {
               role='button'
               className='bp4-button bp4-minimal bp4-icon-label'
               to='/upload'
-          >Upload</Link>
+          >
+            Upload
+          </Link>
         </NavbarHeading>
         <NavbarHeading>
           <Link
               role='button'
               className='bp4-button bp4-minimal bp4-icon-label'
               to='/about'
-          >About</Link>
+          >
+            About
+          </Link>
         </NavbarHeading>
       </Navbar.Group>
     </Navbar>
