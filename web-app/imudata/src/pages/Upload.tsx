@@ -4,6 +4,7 @@ import {useNavigate} from 'react-router-dom';
 import {Card, FileInput, H1} from "@blueprintjs/core";
 import PageHolder from "../components/PageHolder";
 import {ImuDataResult} from "../models/imudata";
+import styles from '../styles/Upload.module.css';
 
 const Upload = () => {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ const Upload = () => {
 
   return (
     <PageHolder>
-      <Card>
+      <Card className={styles.uploadCard}>
         <H1>Upload</H1>
         <div>
           <FileInput large text={'Upload your file'} buttonText={'Upload'} onInputChange={handleFileUpload} />
@@ -52,7 +53,7 @@ const Upload = () => {
       </Card>
       <br/>
         {imuDataResult &&
-          <Card>
+          <Card className={styles.uploadCard}>
             <div>
               <div>
                 <p>Repetitions: {imuDataResult.repetitions}</p>
