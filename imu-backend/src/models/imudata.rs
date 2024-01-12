@@ -2,7 +2,7 @@ use actix_web::error::Error;
 use serde::{Deserialize, Serialize};
 use crate::errors::{ImuServerError, ServerResponseError};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RawData {
     pub time: f32,
     pub linear_acceleration_x: f32,

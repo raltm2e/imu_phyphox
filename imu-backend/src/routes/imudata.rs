@@ -1,6 +1,4 @@
-use crate::data_processing::{
-    count_repetitions, get_imudata_result, get_processed_data, handle_lines,
-};
+use crate::data_processing::{count_repetitions, filter_noise, get_imudata_result, get_processed_data, handle_lines};
 use crate::errors::{ImuServerError, ServerResponseError};
 use crate::helpers::files::process_raw_csv;
 use crate::models::imudata::ImuDataResult;
@@ -32,16 +30,17 @@ async fn imudata(req_body: String) -> Result<Json<ImuDataResult>, Error> {
 
 #[post("/imudata_file")]
 async fn imudata_file(payload: Multipart) -> Result<Json<ImuDataResult>, Error> {
-    let raw_data = process_raw_csv(payload).await.map_err(|e| {
+    let mut raw_data = process_raw_csv(payload).await.map_err(|e| {
         error!("Failed to get raw data from input: {:?}", e);
         ServerResponseError(ImuServerError::FileNotFound.into())
     })?;
-    let processed_data = get_processed_data(&raw_data, 100).map_err(|e| {
+    let filtered_raw_data = filter_noise(&mut raw_data);
+    let processed_data = get_processed_data(&filtered_raw_data, 100).map_err(|e| {
         error!("Failed to process raw data: {:?}", e);
         ServerResponseError(ImuServerError::DataProcessing.into())
     })?;
-    let repetitions: u32 = count_repetitions(&raw_data);
-    let imudata_result = get_imudata_result(processed_data, repetitions, raw_data).map_err(|e| {
+    let repetitions: u32 = count_repetitions(&filtered_raw_data);
+    let imudata_result = get_imudata_result(processed_data, repetitions, filtered_raw_data).map_err(|e| {
         error!("Failed to summarize final results: {:?}", e);
         ServerResponseError(ImuServerError::DataProcessing.into())
     })?;

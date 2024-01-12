@@ -1,3 +1,2 @@
-pub const ACCELERATION_NOISE_THRESHOLD_POSITIVE: f32 = 0.9;
-pub const ACCELERATION_NOISE_THRESHOLD_NEGATIVE: f32 = -1.5;
+pub const MOVING_AVG_WINDOW_SIZE: usize = 5;
 pub const TEMP_FILE_PATH: &str = "/tmp/";
