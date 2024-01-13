@@ -1,4 +1,4 @@
-use crate::constants::MOVING_AVG_WINDOW_SIZE;
+use crate::constants::{MAX_PEAK_PROMINENCE, MIN_PEAK_PROMINENCE, MOVING_AVG_WINDOW_SIZE};
 use crate::errors::{ImuServerError, ServerResponseError};
 use crate::models::imudata::{ImuDataResult, ProcessedData, RawData};
 use actix_web::error::Error;
@@ -42,8 +42,8 @@ pub fn count_repetitions(raw_data: &[RawData]) -> u32 {
         .map(|p| p.linear_acceleration_z)
         .collect();
     let mut fp = PeakFinder::new(single_column.as_ref());
-    fp.with_min_prominence(6.5);
-    fp.with_min_height(0.);
+    fp.with_min_prominence(MIN_PEAK_PROMINENCE);
+    fp.with_max_prominence(MAX_PEAK_PROMINENCE);
     let peaks = fp.find_peaks();
     peaks.len() as u32
 }
