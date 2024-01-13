@@ -7,7 +7,6 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::vec::Vec;
-use log::error;
 use crate::helpers::filtering::moving_average;
 
 pub fn filter_noise(raw_data: &mut Vec<RawData>) -> Vec<RawData> {
@@ -60,12 +59,6 @@ pub fn handle_lines(lines: Vec<String>) -> Result<Vec<RawData>, Error> {
 }
 
 pub fn get_raw_data_from_file_path(file_path: &PathBuf) -> Result<Vec<RawData>, Error> {
-    if let Some(file_extension) = file_path.extension() {
-        if file_extension != "csv" {
-            error!("File extension is not CSV");
-            return Err(ServerResponseError(ImuServerError::FileNotFound.into()).into());
-        }
-    }
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
     handle_lines(
