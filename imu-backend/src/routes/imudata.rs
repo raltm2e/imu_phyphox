@@ -3,7 +3,7 @@ use crate::errors::{ImuServerError, ServerResponseError};
 use crate::helpers::files::process_raw_csv;
 use crate::models::imudata::ImuDataResult;
 use actix_multipart::Multipart;
-use actix_web::web::Json;
+use actix_web::web::{Json, Path};
 use actix_web::{error::Error, get, post, HttpResponse, Responder};
 use log::error;
 
@@ -28,14 +28,18 @@ async fn imudata(req_body: String) -> Result<Json<ImuDataResult>, Error> {
     Ok(Json(imudata))
 }
 
-#[post("/imudata_file")]
-async fn imudata_file(payload: Multipart) -> Result<Json<ImuDataResult>, Error> {
+#[post("/imudata_file/{mass_parameter}")]
+async fn imudata_file(mass_parameter: Path<String>, payload: Multipart) -> Result<Json<ImuDataResult>, Error> {
+    let mass = mass_parameter.parse::<u32>().map_err(|e| {
+        error!("Failed to parse mass: {:?}", e);
+        ServerResponseError(ImuServerError::InvalidInputData.into())
+    })?;
     let mut raw_data = process_raw_csv(payload).await.map_err(|e| {
         error!("Failed to get raw data from input: {:?}", e);
         ServerResponseError(ImuServerError::FileNotFound.into())
     })?;
     let filtered_raw_data = filter_noise(&mut raw_data);
-    let processed_data = get_processed_data(&filtered_raw_data, 100).map_err(|e| {
+    let processed_data = get_processed_data(&filtered_raw_data, mass).map_err(|e| {
         error!("Failed to process raw data: {:?}", e);
         ServerResponseError(ImuServerError::DataProcessing.into())
     })?;

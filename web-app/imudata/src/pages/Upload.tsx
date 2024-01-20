@@ -1,14 +1,15 @@
-import React, {useEffect} from 'react';
+import React, {useState, useEffect} from 'react';
 import Plot from 'react-plotly.js';
 import {useNavigate} from 'react-router-dom';
-import {Card, FileInput, H1} from "@blueprintjs/core";
+import {Card, FileInput, H1, InputGroup} from "@blueprintjs/core";
 import PageHolder from "../components/PageHolder";
 import {ImuDataResult} from "../models/imudata";
 import styles from '../styles/Upload.module.css';
 
 const Upload = () => {
   const navigate = useNavigate();
-  const [imuDataResult, setImuDataResult] = React.useState<ImuDataResult | undefined>(undefined);
+  const [imuDataResult, setImuDataResult] = useState<ImuDataResult | undefined>(undefined);
+  const [massParameter, setMassParameter] = useState('');
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     setImuDataResult(undefined);
@@ -22,7 +23,7 @@ const Upload = () => {
           data.append('photo', event.target.files[0]);
           data.append('name', 'Test Name');
           data.append('desc', 'Test description');
-          fetch('/imudata_file', {
+          fetch(`/imudata_file/${massParameter}`, {
             method: 'POST',
             headers: {
               'Accept': 'application/json',
@@ -48,11 +49,16 @@ const Upload = () => {
       <Card className={styles.card}>
         <H1>Upload</H1>
         <div>
-          <FileInput large text={'Upload your file'} buttonText={'Upload'} onInputChange={handleFileUpload} />
+          <InputGroup large type="number" value={massParameter} onChange={e => setMassParameter(e.target.value)}
+                 placeholder="Mass of weights"/>
+        </div>
+        <br/>
+        <div>
+          <FileInput large fill text={'Upload csv file'} buttonText={'Upload'} onInputChange={handleFileUpload}/>
         </div>
       </Card>
       <br/>
-        {imuDataResult &&
+      {imuDataResult &&
           <Card className={styles.uploadCard}>
             <div>
               <div>

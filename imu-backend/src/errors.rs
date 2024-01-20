@@ -10,6 +10,8 @@ pub enum ImuServerError {
     FileNotFound,
     #[error("Failed to process data")]
     DataProcessing,
+    #[error("Invalid input data")]
+    InvalidInputData,
     #[error("Token missing")]
     TokenMissing,
 }
