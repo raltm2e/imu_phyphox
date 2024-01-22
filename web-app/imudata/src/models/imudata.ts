@@ -14,6 +14,7 @@ type ProcessedData = {
 };
 
 type ImuDataResult = {
+  mass: number;
   repetitions: number;
   spent_time: number;
   total_distance: number;
@@ -22,8 +23,18 @@ type ImuDataResult = {
   processed_data: ProcessedData[];
 };
 
+enum Noise {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high'
+}
+
 export type {
-  RawData,
-  ProcessedData,
   ImuDataResult,
+  ProcessedData,
+  RawData,
+};
+
+export {
+  Noise,
 };

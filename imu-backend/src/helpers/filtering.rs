@@ -10,3 +10,20 @@ pub fn moving_average(raw_data: &[RawData], window_size: usize) -> Vec<f32> {
     }
     result
 }
+
+pub enum Noise {
+    Low,
+    Medium,
+    High,
+}
+
+impl From<String> for Noise {
+    fn from(s: String) -> Self {
+        match s.as_str() {
+            "low" => Noise::Low,
+            "medium" => Noise::Medium,
+            "high" => Noise::High,
+            _ => Noise::Medium,
+        }
+    }
+}

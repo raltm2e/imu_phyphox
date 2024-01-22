@@ -1,15 +1,31 @@
 import React, {useState, useEffect} from 'react';
 import Plot from 'react-plotly.js';
 import {useNavigate} from 'react-router-dom';
-import {Card, FileInput, H1, InputGroup} from "@blueprintjs/core";
+import {Button, Card, FileInput, H1, H5, InputGroup, MenuItem} from "@blueprintjs/core";
+import { ItemRenderer, Select } from "@blueprintjs/select";
 import PageHolder from "../components/PageHolder";
-import {ImuDataResult} from "../models/imudata";
+import {ImuDataResult, Noise} from "../models/imudata";
 import styles from '../styles/Upload.module.css';
 
 const Upload = () => {
   const navigate = useNavigate();
   const [imuDataResult, setImuDataResult] = useState<ImuDataResult | undefined>(undefined);
   const [massParameter, setMassParameter] = useState('');
+  const [noiseParameter, setNoiseParameter] = useState(Noise.LOW);
+  const NoiseSelect = Select<Noise>;
+  const renderNoise: ItemRenderer<Noise> = (noise, { handleClick, modifiers }) => {
+    if (!modifiers.matchesPredicate) {
+      return null;
+    }
+    return (
+        <MenuItem
+            active={modifiers.active}
+            key={noise}
+            onClick={handleClick}
+            text={noise}
+        />
+    );
+  };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     setImuDataResult(undefined);
@@ -23,7 +39,7 @@ const Upload = () => {
           data.append('photo', event.target.files[0]);
           data.append('name', 'Test Name');
           data.append('desc', 'Test description');
-          fetch(`/imudata_file/${massParameter}`, {
+          fetch(`/imudata_file/${massParameter}&${noiseParameter}`, {
             method: 'POST',
             headers: {
               'Accept': 'application/json',
@@ -46,26 +62,43 @@ const Upload = () => {
 
   return (
     <PageHolder>
+      <H1>Upload</H1>
       <Card className={styles.card}>
-        <H1>Upload</H1>
         <div>
+          <H5>Mass (kg)</H5>
           <InputGroup large type="number" value={massParameter} onChange={e => setMassParameter(e.target.value)}
-                 placeholder="Mass of weights"/>
+                      placeholder="Mass (kg)"/>
         </div>
         <br/>
         <div>
+          <H5>Noise level</H5>
+          <NoiseSelect
+              fill
+              filterable={false}
+              items={Object.values(Noise)}
+              itemRenderer={renderNoise}
+              onItemSelect={setNoiseParameter}
+              inputProps={{disabled: true}}
+          >
+            <Button text={noiseParameter} rightIcon="double-caret-vertical" />
+          </NoiseSelect>
+        </div>
+        <br/>
+        <div>
+          <H5>Raw data</H5>
           <FileInput large fill text={'Upload csv file'} buttonText={'Upload'} onInputChange={handleFileUpload}/>
         </div>
       </Card>
       <br/>
       {imuDataResult &&
-          <Card className={styles.uploadCard}>
+          <Card className={styles.card}>
             <div>
               <div>
                 <p>Repetitions: {imuDataResult.repetitions}</p>
+                <p>Mass: {imuDataResult.mass} kg</p>
                 <p>Exercise time: {imuDataResult.spent_time} seconds</p>
                 <p>Total distance: {imuDataResult.total_distance} meters</p>
-                <p>Spent energy: {imuDataResult.spent_energy} Joules</p>
+                <p>Spent energy: {imuDataResult.spent_energy} kcal</p>
               </div>
               <div>
                 <Plot

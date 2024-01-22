@@ -40,6 +40,7 @@ pub struct ProcessedData {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ImuDataResult {
+    pub mass: u32,
     pub repetitions: u32,
     pub spent_time: f32,
     pub total_distance: f32,

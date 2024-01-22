@@ -1,5 +1,9 @@
-use crate::constants::{MAX_PEAK_PROMINENCE, MIN_PEAK_PROMINENCE, MOVING_AVG_WINDOW_SIZE};
+use crate::constants::{
+    MAX_PEAK_PROMINENCE, MIN_PEAK_PROMINENCE, MOVING_AVG_WINDOW_SIZE_HIGH,
+    MOVING_AVG_WINDOW_SIZE_LOW, MOVING_AVG_WINDOW_SIZE_MEDIUM,
+};
 use crate::errors::{ImuServerError, ServerResponseError};
+use crate::helpers::filtering::{moving_average, Noise};
 use crate::models::imudata::{ImuDataResult, ProcessedData, RawData};
 use actix_web::error::Error;
 use find_peaks::PeakFinder;
@@ -7,12 +11,17 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::vec::Vec;
-use crate::helpers::filtering::moving_average;
 
-pub fn filter_noise(raw_data: &mut Vec<RawData>) -> Vec<RawData> {
-    let smoothed_data = moving_average(raw_data, MOVING_AVG_WINDOW_SIZE);
-    for (i, data) in raw_data.iter_mut().enumerate().skip(MOVING_AVG_WINDOW_SIZE) {
-        data.linear_acceleration_z = smoothed_data[i - MOVING_AVG_WINDOW_SIZE];
+pub fn filter_noise(raw_data: &mut Vec<RawData>, noise: String) -> Vec<RawData> {
+    let noise_enum: Noise = noise.into();
+    let window_size = match noise_enum {
+        Noise::Low => MOVING_AVG_WINDOW_SIZE_LOW,
+        Noise::Medium => MOVING_AVG_WINDOW_SIZE_MEDIUM,
+        Noise::High => MOVING_AVG_WINDOW_SIZE_HIGH,
+    };
+    let smoothed_data = moving_average(raw_data, window_size);
+    for (i, data) in raw_data.iter_mut().enumerate().skip(window_size) {
+        data.linear_acceleration_z = smoothed_data[i - window_size];
     }
     raw_data.clone()
 }
@@ -37,10 +46,7 @@ fn get_energy_spent(mass: u32, distance: f32, acceleration: f32) -> f32 {
 }
 
 pub fn count_repetitions(raw_data: &[RawData]) -> u32 {
-    let single_column: Vec<f32> = raw_data
-        .iter()
-        .map(|p| p.linear_acceleration_z)
-        .collect();
+    let single_column: Vec<f32> = raw_data.iter().map(|p| p.linear_acceleration_z).collect();
     let mut fp = PeakFinder::new(single_column.as_ref());
     fp.with_min_prominence(MIN_PEAK_PROMINENCE);
     fp.with_max_prominence(MAX_PEAK_PROMINENCE);
@@ -107,6 +113,7 @@ pub fn get_processed_data(raw_data: &[RawData], mass: u32) -> Result<Vec<Process
 pub fn get_imudata_result(
     processed_data: Vec<ProcessedData>,
     repetitions: u32,
+    mass: u32,
     raw_data: Vec<RawData>,
 ) -> Result<ImuDataResult, Error> {
     let last_row = match processed_data.last() {
@@ -114,10 +121,11 @@ pub fn get_imudata_result(
         None => return Err(ServerResponseError(ImuServerError::DataProcessing.into()).into()),
     };
     let imu_data_result = ImuDataResult {
+        mass,
         repetitions,
         spent_time: last_row.time,
         total_distance: last_row.distance,
-        spent_energy: last_row.energy,
+        spent_energy: last_row.energy / 4184.0,
         raw_data,
         processed_data,
     };
