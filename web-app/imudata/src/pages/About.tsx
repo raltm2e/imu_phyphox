@@ -9,7 +9,7 @@ const About = () => {
   const [fetchedData, setFetchedData] = useState('');
 
   const fetchData = () => {
-    fetch('/hello')
+    fetch('/health')
         .then(r => r.text())
         .then(text => setFetchedData(text));
   };
@@ -23,7 +23,7 @@ const About = () => {
     <PageHolder>
       <Card className={styles.card}>
         <H1>About</H1>
-        <p>{fetchedData}</p>
+        <p>Server status: {fetchedData}</p>
       </Card>
     </PageHolder>
   );

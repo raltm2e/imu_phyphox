@@ -32,13 +32,13 @@ async fn imudata_file(
     let repetitions: u32 = count_repetitions(&filtered_raw_data);
     let imudata_result = get_imudata_result(processed_data, repetitions, mass, filtered_raw_data)
         .map_err(|e| {
-            error!("Failed to summarize final results: {:?}", e);
-            ServerResponseError(ImuServerError::DataProcessing.into())
-        })?;
+        error!("Failed to summarize final results: {:?}", e);
+        ServerResponseError(ImuServerError::DataProcessing.into())
+    })?;
     Ok(Json(imudata_result))
 }
 
-#[get("/hello")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
+#[get("/health")]
+async fn health() -> impl Responder {
+    HttpResponse::Ok().body("OK!")
 }
