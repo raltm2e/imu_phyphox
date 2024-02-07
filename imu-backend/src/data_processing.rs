@@ -131,3 +131,63 @@ pub fn get_imudata_result(
     };
     Ok(imu_data_result)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_velocity() {
+        let acceleration = 2.0;
+        let v0 = 0.0;
+        let delta_t = 1.0;
+        let expected_velocity = 2.0;
+        assert_eq!(get_velocity(acceleration, v0, delta_t), expected_velocity);
+    }
+
+    #[test]
+    fn test_get_distance() {
+        let delta_v = 2.0;
+        let delta_t = 4.0;
+        let expected_distance = 8.0;
+        assert_eq!(get_distance(delta_v, delta_t), expected_distance);
+    }
+
+    #[test]
+    fn test_get_energy_spent() {
+        let mass = 10;
+        let distance = 2.0;
+        let acceleration = 2.0;
+        let expected_energy = 40.0;
+        assert_eq!(get_energy_spent(mass, distance, acceleration), expected_energy);
+    }
+
+    #[test]
+    fn test_count_repetitions() {
+        let raw_data = vec![
+            RawData {
+                time: 0.0,
+                linear_acceleration_x: 0.0,
+                linear_acceleration_y: 0.0,
+                linear_acceleration_z: 1.0,
+                absolute_acceleration: 1.0,
+            },
+            RawData {
+                time: 1.0,
+                linear_acceleration_x: 0.0,
+                linear_acceleration_y: 0.0,
+                linear_acceleration_z: 4.0,
+                absolute_acceleration: 4.0,
+            },
+            RawData {
+                time: 2.0,
+                linear_acceleration_x: 0.0,
+                linear_acceleration_y: 0.0,
+                linear_acceleration_z: 1.0,
+                absolute_acceleration: 1.0,
+            },
+        ];
+        let expected_repetitions = 1;
+        assert_eq!(count_repetitions(&raw_data), expected_repetitions);
+    }
+}
