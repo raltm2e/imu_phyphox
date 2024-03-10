@@ -4,7 +4,7 @@ use crate::constants::{
 };
 use crate::errors::{ImuServerError, ServerResponseError};
 use crate::helpers::filtering::{moving_average, Noise};
-use crate::models::imudata::{ImuDataResult, ProcessedData, RawData};
+use crate::models::imudata::{EnergyConversion, ImuDataResult, ProcessedData, RawData};
 use actix_web::error::Error;
 use find_peaks::PeakFinder;
 use std::fs::File;
@@ -125,7 +125,7 @@ pub fn get_imudata_result(
         repetitions,
         spent_time: last_row.time,
         total_distance: last_row.distance,
-        spent_energy: last_row.energy / 4184.0,
+        spent_energy: last_row.energy.joules_to_kcal(),
         raw_data,
         processed_data,
     };
@@ -159,7 +159,10 @@ mod tests {
         let distance = 2.0;
         let acceleration = 2.0;
         let expected_energy = 40.0;
-        assert_eq!(get_energy_spent(mass, distance, acceleration), expected_energy);
+        assert_eq!(
+            get_energy_spent(mass, distance, acceleration),
+            expected_energy
+        );
     }
 
     #[test]

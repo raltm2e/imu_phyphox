@@ -1,6 +1,6 @@
+use crate::errors::{ImuServerError, ServerResponseError};
 use actix_web::error::Error;
 use serde::{Deserialize, Serialize};
-use crate::errors::{ImuServerError, ServerResponseError};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RawData {
@@ -16,9 +16,7 @@ impl TryFrom<Vec<f32>> for RawData {
 
     fn try_from(values: Vec<f32>) -> Result<Self, Error> {
         if values.len() != 5 {
-            return Err(
-                ServerResponseError(ImuServerError::DataProcessing.into()).into()
-            )
+            return Err(ServerResponseError(ImuServerError::DataProcessing.into()).into());
         }
         Ok(RawData {
             time: values[0],
@@ -27,6 +25,16 @@ impl TryFrom<Vec<f32>> for RawData {
             linear_acceleration_z: values[3],
             absolute_acceleration: values[4],
         })
+    }
+}
+
+pub trait EnergyConversion {
+    fn joules_to_kcal(self) -> f32;
+}
+
+impl EnergyConversion for f32 {
+    fn joules_to_kcal(self) -> f32 {
+        self / 4184.0
     }
 }
 
