@@ -1,6 +1,4 @@
-use crate::data_processing::{
-    count_repetitions, filter_noise, get_imudata_result, get_processed_data,
-};
+use crate::data_processing::{filter_noise, get_imudata_result, get_processed_data};
 use crate::errors::{ImuServerError, ServerResponseError};
 use crate::helpers::files::process_raw_csv;
 use crate::models::imudata::ImuDataResult;
@@ -29,12 +27,11 @@ async fn imudata_file(
         error!("Failed to process raw data: {:?}", e);
         ServerResponseError(ImuServerError::DataProcessing.into())
     })?;
-    let repetitions: u32 = count_repetitions(&filtered_raw_data);
-    let imudata_result = get_imudata_result(processed_data, repetitions, mass, filtered_raw_data)
-        .map_err(|e| {
-        error!("Failed to summarize final results: {:?}", e);
-        ServerResponseError(ImuServerError::DataProcessing.into())
-    })?;
+    let imudata_result =
+        get_imudata_result(processed_data, mass, filtered_raw_data).map_err(|e| {
+            error!("Failed to summarize final results: {:?}", e);
+            ServerResponseError(ImuServerError::DataProcessing.into())
+        })?;
     Ok(Json(imudata_result))
 }
 

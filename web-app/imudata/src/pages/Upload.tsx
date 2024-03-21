@@ -129,11 +129,11 @@ const Upload = () => {
                     data={[{
                       type: 'scatter',
                       x: imuDataResult.processed_data.map(data => data.time),
-                      y: imuDataResult.processed_data.map(data => data.energy),
-                      name: 'Energy'
+                      y: imuDataResult.processed_data.map(data => data.displacement),
+                      name: 'Displacement'
                     },
                     ]}
-                    layout={{title: 'Spent energy'}}
+                    layout={{title: 'Position of the phone'}}
                 />
               </div>
             </div>

@@ -1,12 +1,8 @@
-use crate::constants::{
-    MAX_PEAK_PROMINENCE, MIN_PEAK_PROMINENCE, MOVING_AVG_WINDOW_SIZE_HIGH,
-    MOVING_AVG_WINDOW_SIZE_LOW, MOVING_AVG_WINDOW_SIZE_MEDIUM,
-};
+use crate::constants::{END_TIME_CUTOFF, MOVING_AVG_WINDOW_SIZE_HIGH, MOVING_AVG_WINDOW_SIZE_LOW, MOVING_AVG_WINDOW_SIZE_MEDIUM, START_TIME_CUTOFF};
 use crate::errors::{ImuServerError, ServerResponseError};
 use crate::helpers::filtering::{moving_average, Noise};
 use crate::models::imudata::{EnergyConversion, ImuDataResult, ProcessedData, RawData};
 use actix_web::error::Error;
-use find_peaks::PeakFinder;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
@@ -23,6 +19,9 @@ pub fn filter_noise(raw_data: &mut Vec<RawData>, noise: String) -> Vec<RawData> 
     for (i, data) in raw_data.iter_mut().enumerate().skip(window_size) {
         data.linear_acceleration_z = smoothed_data[i - window_size];
     }
+    let max_time = raw_data.iter().map(|data| data.time).fold(f32::MIN, f32::max);
+    let end_time_cutoff = max_time - END_TIME_CUTOFF;
+    raw_data.retain(|data| data.time >= START_TIME_CUTOFF && data.time <= end_time_cutoff);
     raw_data.clone()
 }
 
@@ -45,13 +44,22 @@ fn get_energy_spent(mass: u32, distance: f32, acceleration: f32) -> f32 {
     mass as f32 * acceleration * distance
 }
 
-pub fn count_repetitions(raw_data: &[RawData]) -> u32 {
-    let single_column: Vec<f32> = raw_data.iter().map(|p| p.linear_acceleration_z).collect();
-    let mut fp = PeakFinder::new(single_column.as_ref());
-    fp.with_min_prominence(MIN_PEAK_PROMINENCE);
-    fp.with_max_prominence(MAX_PEAK_PROMINENCE);
-    let peaks = fp.find_peaks();
-    peaks.len() as u32
+fn get_upward_motion_indices(displacement_vec: &[f32]) -> (Vec<usize>, Vec<usize>) {
+    let mut start_indices = Vec::new();
+    let mut end_indices = Vec::new();
+    for i in 1..displacement_vec.len() - 1 {
+        if displacement_vec[i - 1] < displacement_vec[i]
+            && displacement_vec[i] >= displacement_vec[i + 1]
+        {
+            end_indices.push(i);
+        }
+        if displacement_vec[i - 1] >= displacement_vec[i]
+            && displacement_vec[i] < displacement_vec[i + 1]
+        {
+            start_indices.push(i);
+        }
+    }
+    (start_indices, end_indices)
 }
 
 pub fn handle_lines(lines: Vec<String>) -> Result<Vec<RawData>, Error> {
@@ -77,9 +85,10 @@ pub fn get_raw_data_from_file_path(file_path: &PathBuf) -> Result<Vec<RawData>, 
 }
 
 pub fn get_processed_data(raw_data: &[RawData], mass: u32) -> Result<Vec<ProcessedData>, Error> {
-    let mut previous_time = 0.0;
+    let mut previous_time = 4.5;
     let mut previous_velocity = 0.0;
     let mut total_distance = 0.0;
+    let mut current_distance = 0.0;
     let mut total_energy = 0.0;
     let mut processed_data: Vec<ProcessedData> = vec![];
     for raw_data_row in raw_data.iter() {
@@ -89,8 +98,9 @@ pub fn get_processed_data(raw_data: &[RawData], mass: u32) -> Result<Vec<Process
             previous_velocity,
             timestep,
         );
-        let distance_step = get_distance(velocity, timestep).abs();
-        total_distance += distance_step;
+        let distance_step = get_distance(velocity, timestep);
+        total_distance += distance_step.abs();
+        current_distance += distance_step;
         let energy_step = get_energy_spent(
             mass,
             distance_step,
@@ -102,6 +112,7 @@ pub fn get_processed_data(raw_data: &[RawData], mass: u32) -> Result<Vec<Process
         let processed_data_row = ProcessedData {
             time: raw_data_row.time,
             distance: total_distance,
+            displacement: current_distance,
             energy: total_energy,
             velocity,
         };
@@ -112,7 +123,6 @@ pub fn get_processed_data(raw_data: &[RawData], mass: u32) -> Result<Vec<Process
 
 pub fn get_imudata_result(
     processed_data: Vec<ProcessedData>,
-    repetitions: u32,
     mass: u32,
     raw_data: Vec<RawData>,
 ) -> Result<ImuDataResult, Error> {
@@ -120,12 +130,31 @@ pub fn get_imudata_result(
         Some(data) => data,
         None => return Err(ServerResponseError(ImuServerError::DataProcessing.into()).into()),
     };
+
+    let (start_indices, end_indices) = get_upward_motion_indices(
+        &processed_data
+            .iter()
+            .map(|p| p.displacement)
+            .collect::<Vec<f32>>(),
+    );
+    let energy_per_repetition: Vec<f32> = start_indices
+        .iter()
+        .zip(end_indices.iter())
+        .map(|(start, end)| processed_data[*end].energy - processed_data[*start].energy)
+        .collect();
+    let total_energy_from_reps = energy_per_repetition.iter().sum::<f32>();
+    let repetition_times: Vec<f32> = start_indices
+        .iter()
+        .zip(end_indices.iter())
+        .map(|(start, end)| processed_data[*end].time - processed_data[*start].time)
+        .collect();
+
     let imu_data_result = ImuDataResult {
         mass,
-        repetitions,
+        repetitions: repetition_times.len() as u32,
         spent_time: last_row.time,
         total_distance: last_row.distance,
-        spent_energy: last_row.energy.joules_to_kcal(),
+        spent_energy: total_energy_from_reps.joules_to_kcal(),
         raw_data,
         processed_data,
     };
@@ -163,34 +192,5 @@ mod tests {
             get_energy_spent(mass, distance, acceleration),
             expected_energy
         );
-    }
-
-    #[test]
-    fn test_count_repetitions() {
-        let raw_data = vec![
-            RawData {
-                time: 0.0,
-                linear_acceleration_x: 0.0,
-                linear_acceleration_y: 0.0,
-                linear_acceleration_z: 1.0,
-                absolute_acceleration: 1.0,
-            },
-            RawData {
-                time: 1.0,
-                linear_acceleration_x: 0.0,
-                linear_acceleration_y: 0.0,
-                linear_acceleration_z: 4.0,
-                absolute_acceleration: 4.0,
-            },
-            RawData {
-                time: 2.0,
-                linear_acceleration_x: 0.0,
-                linear_acceleration_y: 0.0,
-                linear_acceleration_z: 1.0,
-                absolute_acceleration: 1.0,
-            },
-        ];
-        let expected_repetitions = 1;
-        assert_eq!(count_repetitions(&raw_data), expected_repetitions);
     }
 }

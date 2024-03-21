@@ -9,6 +9,7 @@ type RawData = {
 type ProcessedData = {
   time: number;
   distance: number;
+  displacement: number;
   energy: number;
   velocity: number;
 };

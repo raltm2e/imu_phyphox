@@ -30,11 +30,16 @@ impl TryFrom<Vec<f32>> for RawData {
 
 pub trait EnergyConversion {
     fn joules_to_kcal(self) -> f32;
+    fn kcal_to_joules(self) -> f32;
 }
 
 impl EnergyConversion for f32 {
     fn joules_to_kcal(self) -> f32 {
         self / 4184.0
+    }
+
+    fn kcal_to_joules(self) -> f32 {
+        self * 4184.0
     }
 }
 
@@ -42,6 +47,7 @@ impl EnergyConversion for f32 {
 pub struct ProcessedData {
     pub time: f32,
     pub distance: f32,
+    pub displacement: f32,
     pub energy: f32,
     pub velocity: f32,
 }

@@ -663,12 +663,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "25cbce373ec4653f1a01a31e8a5e5ec0c622dc27ff9c4e6606eefef5cbbed4a5"
 
 [[package]]
-name = "find_peaks"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17ba6fe8df99019a8cb0c712414e10081b3bbdb10d8f7ab95719863ced5db982"
-
-[[package]]
 name = "flate2"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -916,7 +910,6 @@ dependencies = [
  "base64",
  "chrono",
  "csv",
- "find_peaks",
  "futures",
  "log",
  "sanitize-filename",
