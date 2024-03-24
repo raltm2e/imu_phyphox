@@ -1,4 +1,4 @@
-use crate::constants::{END_TIME_CUTOFF, MOVING_AVG_WINDOW_SIZE_HIGH, MOVING_AVG_WINDOW_SIZE_LOW, MOVING_AVG_WINDOW_SIZE_MEDIUM, START_TIME_CUTOFF};
+use crate::constants::{END_TIME_CUTOFF, GRAVITATIONAL_ACCELERATION, MOVING_AVG_WINDOW_SIZE_HIGH, MOVING_AVG_WINDOW_SIZE_LOW, MOVING_AVG_WINDOW_SIZE_MEDIUM, START_TIME_CUTOFF};
 use crate::errors::{ImuServerError, ServerResponseError};
 use crate::helpers::filtering::{moving_average, Noise};
 use crate::models::imudata::{EnergyConversion, ImuDataResult, ProcessedData, RawData};
@@ -41,7 +41,7 @@ fn get_energy_spent(mass: u32, distance: f32, acceleration: f32) -> f32 {
     // A = F*s
     // F = m*a
     // A = m*a*s
-    mass as f32 * acceleration * distance
+    mass as f32 * (acceleration + GRAVITATIONAL_ACCELERATION) * distance
 }
 
 fn get_upward_motion_indices(displacement_vec: &[f32]) -> (Vec<usize>, Vec<usize>) {
