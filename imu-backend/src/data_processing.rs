@@ -186,7 +186,7 @@ mod tests {
     fn test_get_energy_spent() {
         let mass = 10;
         let distance = 2.0;
-        let acceleration = 2.0;
+        let acceleration = -GRAVITATIONAL_ACCELERATION + 2.0;
         let expected_energy = 40.0;
         assert_eq!(
             get_energy_spent(mass, distance, acceleration),
